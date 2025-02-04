@@ -1,11 +1,28 @@
 from fastapi import FastAPI, HTTPException
-from src.pred.image_classifier import *
-from pydantic import BaseModel
+from pred.image_classifier import *
+from fastapi.middleware.cors import CORSMiddleware
+from schemas.image_schema import Img
 
-app = FastAPI(title="Image Classifier API")
+app = FastAPI(title="Ferdi's Image Classifier API")
 
-class Img(BaseModel):
-    img_url: str
+origins = [
+    "http://localhost:3000",
+    "localhost:3000",
+    "*",
+    "http://127.0.0.1:8089/",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+@app.get("/")
+async def read_main():
+    return {"msg": "Hello World !!!!"}
 
 @app.post("/predict/tf/", status_code=200)
 async def predict_tf(request: Img):
@@ -15,5 +32,7 @@ async def predict_tf(request: Img):
         # error otherwise.
         raise HTTPException(
             status_code=404, detail="Image could not be downloaded"
+
         )
+
     return prediction

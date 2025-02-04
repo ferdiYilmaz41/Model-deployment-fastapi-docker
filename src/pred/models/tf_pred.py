@@ -70,5 +70,7 @@ def tf_predict(image):
     predicted_class = np.argmax(prediction)
     confidence = round(float(np.max(prediction)*100),2)
     return {"predicted_class": labels[predicted_class], "confidence": confidence}
-predict=tf_predict('C:/Users/ferdi/Desktop/Model-deployment-fastapi-docker/src/pred/models/image.png')
-print(predict)
+
+# Tested the functions
+# predict=tf_predict('C:/Users/ferdi/Desktop/Model-deployment-fastapi-docker/src/pred/models/image.png')
+# print(predict)
