@@ -5,7 +5,7 @@ from PIL import Image
 import os
 import logging
 import h5py
-print("Tensorflow version: ", tensorflow.version.VERSION)
+
 def load_model() :
     model_path = os.path.join(os.path.dirname(__file__), 'model.h5')
     logging.debug(f"Loading image from URL: {model_path}")
