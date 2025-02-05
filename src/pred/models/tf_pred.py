@@ -1,14 +1,21 @@
-import tensorflow as tf
+from io import BytesIO
+import tensorflow 
 import numpy as np
 from PIL import Image
 import os
-
+import logging
+import h5py
+print("Tensorflow version: ", tensorflow.version.VERSION)
 def load_model() :
     model_path = os.path.join(os.path.dirname(__file__), 'model.h5')
-    return tf.keras.models.load_model(model_path)
+    logging.debug(f"Loading image from URL: {model_path}")
+    model= tensorflow.keras.models.load_model(model_path)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
-def pre_process_image(image):
-    img = Image.open(image).convert("RGB")
+def pre_process_image(image: bytes):
+    img = Image.open(BytesIO(image))
+    print(f"Image size: {img.size}") 
     img = img.resize((30,30))
     img_array = np.array(img)/255
     img_array = np.expand_dims(img_array, axis=0)
@@ -69,7 +76,11 @@ def tf_predict(image):
     prediction = model.predict(img_array)
     predicted_class = np.argmax(prediction)
     confidence = round(float(np.max(prediction)*100),2)
-    return {"predicted_class": labels[predicted_class], "confidence": confidence}
+    return {
+            "status_code": 200,  # Başarılı yanıt için status code
+            "predicted_class": labels[predicted_class],
+            "confidence": confidence
+        }
 
 # Tested the functions
 # predict=tf_predict('C:/Users/ferdi/Desktop/Model-deployment-fastapi-docker/src/pred/models/image.png')

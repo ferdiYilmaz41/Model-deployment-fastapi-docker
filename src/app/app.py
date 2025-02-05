@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException
-from pred.image_classifier import *
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from src.pred.image_classifier import tf_run_classifier, tf_run_classifier_from_bytes
 from fastapi.middleware.cors import CORSMiddleware
-from schemas.image_schema import Img
+from src.schemas.image_schema import Img
+from typing import Union
 
 app = FastAPI(title="Ferdi's Image Classifier API")
 
@@ -36,3 +37,14 @@ async def predict_tf(request: Img):
         )
 
     return prediction
+@app.post("/predict/tf/upload/", status_code=200)
+async def predict_tf_upload(file: UploadFile = File(...)):
+    try:
+        
+        image_bytes = await file.read()
+        print(f"Image bytes length: {len(image_bytes)}")
+        prediction = tf_run_classifier_from_bytes(image_bytes)
+        return prediction
+    except Exception as e:
+        print(f"Error in predict_tf_upload: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

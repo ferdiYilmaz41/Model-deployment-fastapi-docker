@@ -1,9 +1,11 @@
-version: "3.9"  # optional since v1.27.0
+version: '3.8'
+
 services:
   app:
-    container_name: mycontainer
     build: .
     ports:
       - "7001:7001"
     volumes:
-      - .:/src/
+      - ./src:/app/src
+    environment:
+      - PYTHONPATH=/app/src/app:/app/src/pred:/app/src/utils
