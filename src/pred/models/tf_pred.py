@@ -4,19 +4,25 @@ import numpy as np
 from PIL import Image
 import os
 import logging
+from fastapi.encoders import jsonable_encoder
 import h5py
 
 def load_model() :
     model_path = os.path.join(os.path.dirname(__file__), 'model.h5')
     logging.debug(f"Loading image from URL: {model_path}")
     model= tensorflow.keras.models.load_model(model_path)
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    #model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
-def pre_process_image(image: bytes):
-    img = Image.open(BytesIO(image))
+def read_image(image_encoded: bytes):
+    image = Image.open(BytesIO(image_encoded))
+    return image
+
+def pre_process_image(img: Image.Image):
+    img = img.convert('RGB')
     print(f"Image size: {img.size}") 
     img = img.resize((30,30))
+    print(f"Resized image size: {img.size}")
     img_array = np.array(img)/255
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
@@ -72,15 +78,15 @@ def load_labels():
 def tf_predict(image):
     model = load_model()
     img_array = pre_process_image(image)
-    labels = load_labels()
+    labels =  load_labels()
     prediction = model.predict(img_array)
     predicted_class = np.argmax(prediction)
     confidence = round(float(np.max(prediction)*100),2)
-    return {
+    return jsonable_encoder({
             "status_code": 200,  # Başarılı yanıt için status code
             "predicted_class": labels[predicted_class],
             "confidence": confidence
-        }
+        })
 
 # Tested the functions
 # predict=tf_predict('C:/Users/ferdi/Desktop/Model-deployment-fastapi-docker/src/pred/models/image.png')

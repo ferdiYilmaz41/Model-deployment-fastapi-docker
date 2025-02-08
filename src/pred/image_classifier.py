@@ -1,7 +1,9 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, File
+from fastapi.encoders import jsonable_encoder
 from src.pred.models.tf_pred import*
-from src.utils.utilities import load_image, load_image_from_bytes
-from typing import Any
+from src.utils.utilities import   load_image
+from src.pred.models.tf_pred import load_labels, load_model,read_image, pre_process_image
+import numpy as np
 import logging
 def safe_tf_run_classifier(img_url: str):
     result = tf_run_classifier(img_url)
@@ -19,18 +21,18 @@ def tf_run_classifier(image: str):
     pred_results["status_code"] = 200
     return pred_results
 
-def tf_run_classifier_from_bytes(image_bytes: bytes):
-    try:
-        print("Loading image from bytes...")
-        img = load_image_from_bytes(image_bytes)
-        if img is None:
-            raise ValueError("Failed to load image from bytes")
-        
-        print("Image loaded successfully. Making prediction...")
-        prediction = tf_predict(img)
-        if prediction.get("status_code") != 200:
-            raise HTTPException(status_code=prediction["status_code"], detail=prediction.get("error", "Unknown error"))
-        return prediction
-    except Exception as e:
-        print(f"Error in tf_run_classifier_from_bytes: {e}")
-        raise
+async def predict_image(file: bytes = File(...)):
+    model= load_model()
+    print("Model loaded")
+    image = read_image(file)
+    print("Image read")
+    img_array = pre_process_image(image)
+    print("Image processed")
+    labels= load_labels()
+    prediction = model.predict(img_array)
+    predicted_class = np.argmax(prediction)
+    confidence = round(float(np.max(prediction)*100),2)
+    return jsonable_encoder({
+            "predicted_class": labels[predicted_class],
+            "confidence": confidence
+        })
